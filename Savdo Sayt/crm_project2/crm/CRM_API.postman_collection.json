@@ -1,0 +1,269 @@
+{
+  "info": {
+    "name": "Qurilish Mollari CRM API",
+    "description": "Django REST API — Mahsulotlar, Savdolar, Mijozlar, Qarzdorlar",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000/api", "type": "string" },
+    { "key": "token", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Login — Token olish",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "  pm.collectionVariables.set('token', json.token);",
+                  "  pm.test('Token olindi ✅', () => pm.expect(json.token).to.be.a('string'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"your_password\"\n}"
+            },
+            "url": "{{base_url}}/login/"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Token {{token}}" }
+            ],
+            "url": "{{base_url}}/logout/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 Mahsulotlar",
+      "item": [
+        {
+          "name": "Barcha mahsulotlar",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/mahsulotlar/",
+              "query": [
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "ordering", "value": "-yaratilgan", "disabled": true },
+                { "key": "page", "value": "1", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bitta mahsulot",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+            "url": "{{base_url}}/mahsulotlar/1/"
+          }
+        },
+        {
+          "name": "Yangi mahsulot qo'shish",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Token {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nomi\": \"Sement M400 50kg\",\n  \"soni\": 100,\n  \"narxi\": 85000\n}"
+            },
+            "url": "{{base_url}}/mahsulotlar/"
+          }
+        },
+        {
+          "name": "Mahsulot yangilash",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Token {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nomi\": \"Sement M400 50kg\",\n  \"soni\": 150,\n  \"narxi\": 90000\n}"
+            },
+            "url": "{{base_url}}/mahsulotlar/1/"
+          }
+        },
+        {
+          "name": "Mahsulot o'chirish",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+            "url": "{{base_url}}/mahsulotlar/1/"
+          }
+        },
+        {
+          "name": "Kam qolganlar",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/mahsulotlar/kam_qolganlar/?chegara=20",
+              "query": [{ "key": "chegara", "value": "20" }]
+            }
+          }
+        },
+        {
+          "name": "Statistika",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+            "url": "{{base_url}}/mahsulotlar/statistika/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛒 Savdolar",
+      "item": [
+        {
+          "name": "Barcha savdolar",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/savdolar/",
+              "query": [
+                { "key": "sana", "value": "2024-01-15", "disabled": true },
+                { "key": "tolov_turi", "value": "nasiya", "disabled": true },
+                { "key": "to_langan", "value": "false", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bitta savdo",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+            "url": "{{base_url}}/savdolar/1/"
+          }
+        },
+        {
+          "name": "Yangi savdo — naqd",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Token {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tolov_turi\": \"naqd\",\n  \"izoh\": \"\",\n  \"itemlar\": [\n    { \"mahsulot_id\": 1, \"soni\": 5 },\n    { \"mahsulot_id\": 2, \"soni\": 2 }\n  ]\n}"
+            },
+            "url": "{{base_url}}/savdolar/"
+          }
+        },
+        {
+          "name": "Yangi savdo — nasiya",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Token {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mijoz\": 1,\n  \"tolov_turi\": \"nasiya\",\n  \"izoh\": \"30 kunga\",\n  \"itemlar\": [\n    { \"mahsulot_id\": 1, \"soni\": 10 }\n  ]\n}"
+            },
+            "url": "{{base_url}}/savdolar/"
+          }
+        },
+        {
+          "name": "Nasiyani to'lash",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+            "url": "{{base_url}}/savdolar/1/tolash/"
+          }
+        },
+        {
+          "name": "Statistika",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+            "url": "{{base_url}}/savdolar/statistika/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Mijozlar",
+      "item": [
+        {
+          "name": "Barcha mijozlar",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/mijozlar/",
+              "query": [
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Yangi mijoz",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Token {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ism_familiya\": \"Sardor Toshmatov\",\n  \"telefon\": \"+998901234567\",\n  \"manzil\": \"Toshkent, Chilonzor\"\n}"
+            },
+            "url": "{{base_url}}/mijozlar/"
+          }
+        },
+        {
+          "name": "Mijoz yangilash",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Token {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ism_familiya\": \"Sardor Toshmatov\",\n  \"telefon\": \"+998909876543\",\n  \"manzil\": \"Toshkent, Yunusobod\"\n}"
+            },
+            "url": "{{base_url}}/mijozlar/1/"
+          }
+        },
+        {
+          "name": "Qarzdorlar ro'yxati",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+            "url": "{{base_url}}/mijozlar/qarzdorlar/"
+          }
+        }
+      ]
+    }
+  ]
+}

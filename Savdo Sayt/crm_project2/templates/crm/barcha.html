@@ -1,0 +1,245 @@
+{% extends 'crm/base.html' %}
+{% block title %}Mahsulotlar — Qurilish Mollari CRM{% endblock %}
+{% block page_title %}Barcha Mahsulotlar{% endblock %}
+{% block page_subtitle %}Omborxona boshqaruvi{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-boxes-stacked" style="color:var(--primary)"></i>
+        <span class="card-title">Mahsulotlar Ro'yxati</span>
+        <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+            <form method="GET" style="display:flex;gap:8px">
+                <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="Qidirish..." style="width:180px">
+                <button type="submit" class="btn btn-outline btn-sm"><i class="fas fa-search"></i></button>
+            </form>
+            <a href="{% url 'kirim_tarixi' %}" class="btn btn-outline btn-sm">
+                <i class="fas fa-history"></i> Kirim tarixi
+            </a>
+            <button class="btn btn-primary btn-sm" onclick="openModal('addModal')">
+                <i class="fas fa-plus"></i> Qo'shish
+            </button>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Mahsulot Nomi</th>
+                    <th>Joriy Qoldi</th>
+                    <th>Narxi</th>
+                    <th>Jami Sotildi</th>
+                    <th>Holat</th>
+                    <th>Amallar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in mahsulotlar %}
+                <tr>
+                    <td style="color:var(--text-muted)">{{ forloop.counter }}</td>
+                    <td><strong>{{ m.nomi }}</strong></td>
+                    <td><strong style="font-size:16px">{{ m.qoldi }}</strong> ta</td>
+                    <td style="font-weight:600;color:var(--primary)">{{ m.narxi|floatformat:0 }} so'm</td>
+                    <td style="color:var(--text-muted)">{{ m.jami_sotildi }} ta</td>
+                    <td>
+                        {% if m.qoldi <= 0 %}
+                            <span class="badge-status badge-danger"><i class="fas fa-xmark"></i> Tugagan</span>
+                        {% elif m.qoldi <= 10 %}
+                            <span class="badge-status badge-warning"><i class="fas fa-exclamation"></i> Kam</span>
+                        {% else %}
+                            <span class="badge-status badge-success"><i class="fas fa-check"></i> Yetarli</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:6px">
+                            <button class="btn btn-success btn-sm"
+                                onclick="openKirim({{ m.pk }}, '{{ m.nomi|escapejs }}', {{ m.qoldi }})"
+                                title="Kirim qo'shish">
+                                <i class="fas fa-plus"></i> Kirim
+                            </button>
+                            <button class="btn btn-warning btn-sm btn-icon"
+                                onclick="openEdit({{ m.pk }}, '{{ m.nomi|escapejs }}', {{ m.narxi }})"
+                                title="Tahrirlash">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm btn-icon"
+                                onclick="openDelete({{ m.pk }}, '{{ m.nomi|escapejs }}')"
+                                title="O'chirish">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">
+                    <i class="fas fa-box-open" style="font-size:32px;opacity:0.3;display:block;margin-bottom:10px"></i>
+                    Mahsulot topilmadi
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Kirim Modal -->
+<div class="modal-overlay" id="kirimModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title"><i class="fas fa-plus" style="color:var(--success);margin-right:8px"></i>Kirim Qo'shish</span>
+            <button class="modal-close" onclick="closeModal('kirimModal')"><i class="fas fa-xmark"></i></button>
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="kirim">
+            <input type="hidden" name="mahsulot_id" id="kirimId">
+            <div class="modal-body">
+                <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;border:1px solid var(--border)">
+                    <div style="font-size:12px;color:var(--text-muted)">Mahsulot</div>
+                    <div style="font-size:15px;font-weight:700" id="kirimNomi"></div>
+                    <div style="font-size:12px;color:var(--text-muted);margin-top:4px">
+                        Joriy qoldi: <strong id="kirimQoldi" style="color:var(--primary)"></strong> ta
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Kirim soni (nechta olib kelindi) *</label>
+                    <input type="number" class="form-control" name="kirim_soni" min="1" required placeholder="Masalan: 10">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Kirim narxi (ixtiyoriy)</label>
+                    <input type="number" class="form-control" name="kirim_narxi" placeholder="Sotib olish narxi">
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                    <label class="form-label">Izoh</label>
+                    <input type="text" class="form-control" name="izoh" placeholder="Masalan: Toshkentdan keldi">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('kirimModal')">Bekor</button>
+                <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Kirim qo'shish</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title"><i class="fas fa-plus" style="color:var(--primary);margin-right:8px"></i>Yangi Mahsulot</span>
+            <button class="modal-close" onclick="closeModal('addModal')"><i class="fas fa-xmark"></i></button>
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="qoshish">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Mahsulot Nomi *</label>
+                    <input type="text" class="form-control" name="nomi" required placeholder="Masalan: Sement 50kg">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                    <div class="form-group">
+                        <label class="form-label">Boshlang'ich qoldi</label>
+                        <input type="number" class="form-control" name="qoldi" min="0" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Narxi (so'm) *</label>
+                        <input type="number" class="form-control" name="narxi" required min="0" placeholder="0">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('addModal')">Bekor</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Saqlash</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Modal (faqat nomi va narxi) -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title"><i class="fas fa-pen" style="color:var(--warning);margin-right:8px"></i>Tahrirlash</span>
+            <button class="modal-close" onclick="closeModal('editModal')"><i class="fas fa-xmark"></i></button>
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="tahrirlash">
+            <input type="hidden" name="mahsulot_id" id="editId">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Mahsulot Nomi</label>
+                    <input type="text" class="form-control" name="nomi" id="editNomi" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Narxi (so'm)</label>
+                    <input type="number" class="form-control" name="narxi" id="editNarxi" min="0">
+                </div>
+                <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px;font-size:12.5px;color:#92400e">
+                    <i class="fas fa-info-circle"></i> Qoldiqni o'zgartirish uchun "Kirim" tugmasidan foydalaning
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('editModal')">Bekor</button>
+                <button type="submit" class="btn btn-warning"><i class="fas fa-check"></i> Yangilash</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title" style="color:var(--danger)"><i class="fas fa-trash" style="margin-right:8px"></i>O'chirish</span>
+            <button class="modal-close" onclick="closeModal('deleteModal')"><i class="fas fa-xmark"></i></button>
+        </div>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="ochirish">
+            <input type="hidden" name="mahsulot_id" id="deleteId">
+            <div class="modal-body" style="text-align:center;padding:20px 22px">
+                <i class="fas fa-circle-exclamation" style="font-size:48px;color:var(--danger);opacity:0.8;display:block;margin-bottom:14px"></i>
+                <p style="font-size:15px;font-weight:600"><span id="deleteNomi"></span></p>
+                <p style="font-size:13px;color:var(--text-muted);margin-top:6px">mahsulotini o'chirishni xohlaysizmi?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeModal('deleteModal')">Bekor</button>
+                <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> O'chirish</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function openKirim(id, nomi, qoldi) {
+    document.getElementById('kirimId').value = id;
+    document.getElementById('kirimNomi').textContent = nomi;
+    document.getElementById('kirimQoldi').textContent = qoldi;
+    openModal('kirimModal');
+}
+
+function openEdit(id, nomi, narxi) {
+    document.getElementById('editId').value = id;
+    document.getElementById('editNomi').value = nomi;
+    document.getElementById('editNarxi').value = narxi;
+    openModal('editModal');
+}
+
+function openDelete(id, nomi) {
+    document.getElementById('deleteId').value = id;
+    document.getElementById('deleteNomi').textContent = '"' + nomi + '"';
+    openModal('deleteModal');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+</script>
+{% endblock %}

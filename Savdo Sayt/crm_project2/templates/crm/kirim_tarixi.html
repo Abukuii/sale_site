@@ -1,0 +1,54 @@
+{% extends 'crm/base.html' %}
+{% block title %}Kirim Tarixi — CRM{% endblock %}
+{% block page_title %}Kirim Tarixi{% endblock %}
+{% block page_subtitle %}Omborga olib kelingan mahsulotlar{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-truck" style="color:var(--success)"></i>
+        <span class="card-title">Kirimlar Ro'yxati</span>
+        <span style="margin-left:8px;background:#ecfdf5;color:var(--success);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">
+            {{ kirimlar.count }} ta
+        </span>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Sana</th>
+                    <th>Mahsulot</th>
+                    <th>Kirim soni</th>
+                    <th>Kirim narxi</th>
+                    <th>Izoh</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for k in kirimlar %}
+                <tr>
+                    <td style="color:var(--text-muted)">{{ forloop.counter }}</td>
+                    <td>{{ k.sana }}</td>
+                    <td><strong>{{ k.mahsulot.nomi }}</strong></td>
+                    <td>
+                        <span style="font-size:16px;font-weight:800;color:var(--success)">+{{ k.soni }}</span> ta
+                    </td>
+                    <td>
+                        {% if k.narxi %}
+                            {{ k.narxi|floatformat:0 }} so'm
+                        {% else %}
+                            <span style="color:var(--text-muted)">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="color:var(--text-muted)">{{ k.izoh|default:"—" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">
+                    Hali kirim amalga oshirilmagan
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

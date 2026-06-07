@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirish — Qurilish Mollari CRM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            background: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(26,86,219,0.25) 0%, transparent 70%);
+            top: -200px; right: -100px;
+            pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: absolute;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(14,165,233,0.15) 0%, transparent 70%);
+            bottom: -100px; left: -100px;
+            pointer-events: none;
+        }
+        .login-box {
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%; max-width: 400px;
+            margin: 16px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+            position: relative; z-index: 1;
+            animation: fadeUp 0.4s ease;
+        }
+        @keyframes fadeUp {
+            from { opacity:0; transform:translateY(20px); }
+            to { opacity:1; transform:translateY(0); }
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .logo-icon {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, #1a56db, #0ea5e9);
+            border-radius: 16px;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 24px; color: white;
+            margin-bottom: 14px;
+            box-shadow: 0 8px 24px rgba(26,86,219,0.4);
+        }
+        .logo h1 { font-size: 20px; font-weight: 800; color: white; }
+        .logo p { font-size: 13px; color: #64748b; margin-top: 4px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 12px; font-weight: 700; color: #94a3b8; margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .input-wrap { position: relative; }
+        .input-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: #475569; font-size: 14px; }
+        .form-control {
+            width: 100%;
+            padding: 11px 13px 11px 38px;
+            background: #0f172a;
+            border: 1.5px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+            color: white;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-control::placeholder { color: #475569; }
+        .form-control:focus {
+            outline: none;
+            border-color: #1a56db;
+            box-shadow: 0 0 0 3px rgba(26,86,219,0.2);
+        }
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #1a56db, #0ea5e9);
+            color: white;
+            border: none; border-radius: 10px;
+            font-size: 14px; font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            margin-top: 8px;
+        }
+        .btn-login:hover { opacity: 0.92; }
+        .btn-login:active { transform: scale(0.99); }
+        .error-msg {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px; color: #fca5a5;
+            margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .footer-text {
+            text-align: center;
+            font-size: 12px; color: #334155;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+<div class="login-box">
+    <div class="logo">
+        <div class="logo-icon"><i class="fas fa-hard-hat"></i></div>
+        <h1>Qurilish Mollari</h1>
+        <p>CRM Tizimiga xush kelibsiz</p>
+    </div>
+
+    {% if form.errors %}
+    <div class="error-msg">
+        <i class="fas fa-circle-xmark"></i>
+        Login yoki parol noto'g'ri. Qayta urinib ko'ring.
+    </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label class="form-label">Foydalanuvchi nomi</label>
+            <div class="input-wrap">
+                <i class="fas fa-user input-icon"></i>
+                <input type="text" name="username" class="form-control" placeholder="Login" autofocus required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Parol</label>
+            <div class="input-wrap">
+                <i class="fas fa-lock input-icon"></i>
+                <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+        </div>
+        <button type="submit" class="btn-login">
+            <i class="fas fa-right-to-bracket"></i> Kirish
+        </button>
+    </form>
+
+    <div class="footer-text">Qurilish Mollari CRM &copy; 2026 Otabek Nematov</div>
+</div>
+</body>
+</html>

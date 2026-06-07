@@ -1,0 +1,68 @@
+{% extends 'crm/base.html' %}
+{% block title %}Savdo Tarixi — CRM{% endblock %}
+{% block page_title %}Savdo Tarixi{% endblock %}
+{% block page_subtitle %}Barcha savdolar ro'yxati{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-history" style="color:var(--primary)"></i>
+        <span class="card-title">Savdolar Tarixi</span>
+        <span style="margin-left:8px;background:#eff6ff;color:var(--primary);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700">
+            {{ savdolar.count }} ta
+        </span>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Sana</th>
+                    <th>Mijoz</th>
+                    <th>To'lov turi</th>
+                    <th>Mahsulotlar</th>
+                    <th>Jami Summa</th>
+                    <th>Holat</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in savdolar %}
+                <tr>
+                    <td style="color:var(--text-muted)">#{{ s.pk }}</td>
+                    <td>{{ s.sana }}</td>
+                    <td>{{ s.mijoz.ism_familiya|default:"—" }}</td>
+                    <td>
+                        {% if s.tolov_turi == 'naqd' %}
+                        <span class="badge-status badge-success"><i class="fas fa-money-bill"></i> Naqd</span>
+                        {% elif s.tolov_turi == 'plastik' %}
+                        <span class="badge-status" style="background:#eff6ff;color:var(--primary)"><i class="fas fa-credit-card"></i> Plastik</span>
+                        {% else %}
+                        <span class="badge-status badge-warning"><i class="fas fa-clock"></i> Nasiya</span>
+                        {% endif %}
+                    </td>
+                    <td style="max-width:250px">
+                        {% for item in s.savdo_itemlar.all %}
+                        <span style="display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:11.5px;margin:2px">
+                            {{ item.mahsulot.nomi }} ×{{ item.soni }}
+                        </span>
+                        {% endfor %}
+                    </td>
+                    <td style="font-weight:700;color:var(--primary)">{{ s.jami_summa|floatformat:0 }} so'm</td>
+                    <td>
+                        {% if s.to_langan %}
+                        <span class="badge-status badge-success"><i class="fas fa-check"></i> To'langan</span>
+                        {% else %}
+                        <span class="badge-status badge-danger"><i class="fas fa-clock"></i> Nasiya</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">
+                    Hali savdo amalga oshirilmagan
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

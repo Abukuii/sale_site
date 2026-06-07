@@ -1,0 +1,89 @@
+{% extends 'crm/base.html' %}
+{% block title %}Qarzdorlar — CRM{% endblock %}
+{% block page_title %}Qarzdorlar{% endblock %}
+{% block page_subtitle %}Nasiya savdolar{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-user-clock" style="color:var(--danger)"></i>
+        <span class="card-title">Nasiya Mijozlar</span>
+        <div style="margin-left:auto;background:#fef2f2;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;color:var(--danger)">
+            {{ mijozlar.count }} ta qarzdor
+        </div>
+    </div>
+
+    {% for mijoz in mijozlar %}
+    <div style="border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:14px;padding:16px 22px;background:var(--surface2)">
+            <div style="width:40px;height:40px;background:linear-gradient(135deg,#ef4444,#f97316);border-radius:10px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:15px;flex-shrink:0">
+                {{ mijoz.ism_familiya|first|upper }}
+            </div>
+            <div style="flex:1">
+                <div style="font-weight:700;font-size:15px">{{ mijoz.ism_familiya }}</div>
+                <div style="font-size:12px;color:var(--text-muted)">
+                    <i class="fas fa-phone" style="margin-right:4px"></i>{{ mijoz.telefon }}
+                    {% if mijoz.manzil %} &nbsp;·&nbsp; <i class="fas fa-location-dot" style="margin-right:4px"></i>{{ mijoz.manzil }}{% endif %}
+                </div>
+            </div>
+            <div style="text-align:right">
+                <div style="font-size:11px;color:var(--text-muted);font-weight:600">JAMI QARZ</div>
+                <div style="font-size:18px;font-weight:800;color:var(--danger)">{{ mijoz.jami_qarz|floatformat:0 }} so'm</div>
+            </div>
+            <form method="POST" style="margin-left:8px">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="ochirish">
+                <input type="hidden" name="mijoz_id" value="{{ mijoz.pk }}">
+                <button type="submit" class="btn btn-danger btn-sm btn-icon" title="O'chirish" onclick="return confirm('Mijozni o\'chirasizmi?')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </form>
+        </div>
+
+        <table style="margin:0">
+            <thead>
+                <tr>
+                    <th style="padding-left:32px">Sana</th>
+                    <th>Mahsulotlar</th>
+                    <th>Summa</th>
+                    <th>To'lash</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for savdo in mijoz.savdolar.all %}
+                {% if not savdo.to_langan %}
+                <tr>
+                    <td style="padding-left:32px;color:var(--text-muted)">{{ savdo.sana }}</td>
+                    <td style="max-width:300px">
+                        {% for item in savdo.savdo_itemlar.all %}
+                        <span style="display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:11.5px;margin:2px">
+                            {{ item.mahsulot.nomi }} × {{ item.soni }}
+                        </span>
+                        {% endfor %}
+                    </td>
+                    <td style="font-weight:700;color:var(--danger)">{{ savdo.jami_summa|floatformat:0 }} so'm</td>
+                    <td>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="tolash">
+                            <input type="hidden" name="savdo_id" value="{{ savdo.pk }}">
+                            <button type="submit" class="btn btn-success btn-sm">
+                                <i class="fas fa-check"></i> To'landi
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% empty %}
+    <div style="text-align:center;padding:50px;color:var(--text-muted)">
+        <i class="fas fa-circle-check" style="font-size:48px;color:var(--success);opacity:0.7;display:block;margin-bottom:14px"></i>
+        <strong style="font-size:16px">Qarzdor mijoz yo'q!</strong>
+        <p style="font-size:13px;margin-top:6px">Barcha savdolar to'langan</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

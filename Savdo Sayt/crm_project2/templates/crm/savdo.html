@@ -1,0 +1,205 @@
+{% extends 'crm/base.html' %}
+{% block title %}Savdo — Qurilish Mollari CRM{% endblock %}
+{% block page_title %}Yangi Savdo{% endblock %}
+{% block page_subtitle %}Mahsulot sotish{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:1fr 340px; gap:20px; align-items:start;">
+
+    <!-- Mahsulotlar jadvali -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-list" style="color:var(--primary)"></i>
+            <span class="card-title">Mavjud Mahsulotlar</span>
+            <div style="margin-left:auto">
+                <input type="text" id="searchInput" class="form-control" placeholder="Qidirish..." style="width:200px;padding:7px 12px;font-size:13px">
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table id="mahsulotTable">
+                <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Nomi</th>
+                        <th>Qoldi</th>
+                        <th>Narxi</th>
+                        <th>Miqdor</th>
+                        <th>Qo'shish</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in mahsulotlar %}
+                    <tr>
+                        <td style="color:var(--text-muted)">{{ forloop.counter }}</td>
+                        <td><strong>{{ m.nomi }}</strong></td>
+                        <td>
+                            <span class="badge-status {% if m.qoldi <= 5 %}badge-danger{% elif m.qoldi <= 20 %}badge-warning{% else %}badge-success{% endif %}">
+                                {{ m.qoldi }} ta
+                            </span>
+                        </td>
+                        <td style="font-weight:600;color:var(--primary)">{{ m.narxi|floatformat:0 }} so'm</td>
+                        <td>
+                            <input type="number" min="1" max="{{ m.qoldi }}" value="1"
+                                class="form-control" style="width:70px;padding:6px 8px"
+                                id="son_{{ m.pk }}">
+                        </td>
+                        <td>
+                            <button class="btn btn-primary btn-sm"
+                                onclick="savdoQosh({{ m.pk }}, '{{ m.nomi }}', {{ m.narxi }}, {{ m.qoldi }})">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted)">Mahsulot topilmadi</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Savdo formasi -->
+    <div style="position:sticky;top:80px">
+        <div class="card">
+            <div class="card-header" style="background:linear-gradient(135deg,#1a56db,#0ea5e9)">
+                <i class="fas fa-receipt" style="color:white"></i>
+                <span class="card-title" style="color:white">Buyurtma</span>
+            </div>
+            <div class="card-body" style="padding:16px">
+                <div id="savdoList" style="min-height:80px;margin-bottom:14px">
+                    <div id="emptyMsg" style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">
+                        <i class="fas fa-cart-shopping" style="font-size:24px;opacity:0.3;display:block;margin-bottom:8px"></i>
+                        Mahsulot qo'shing
+                    </div>
+                </div>
+
+                <div style="border-top:2px solid var(--border);padding-top:12px;margin-bottom:14px">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <span style="font-size:13px;font-weight:600;color:var(--text-muted)">JAMI SUMMA</span>
+                        <span id="jamiSumma" style="font-size:20px;font-weight:800;color:var(--primary)">0 so'm</span>
+                    </div>
+                </div>
+
+                <form method="POST" id="savdoForm">
+                    {% csrf_token %}
+                    <div id="hiddenInputs"></div>
+
+                    <div class="form-group">
+                        <label class="form-label">To'lov turi</label>
+                        <select class="form-control" name="tolov_turi" id="tolovTuri" onchange="toggleNasiya()">
+                            <option value="naqd">💵 Naqd pul</option>
+                            <option value="plastik">💳 Plastik karta</option>
+                            <option value="nasiya">📋 Nasiya</option>
+                        </select>
+                    </div>
+
+                    <div id="nasiyaSection" style="display:none;background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid var(--border)">
+                        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">Mijoz Ma'lumotlari</div>
+                        <div class="form-group">
+                            <label class="form-label">Mavjud mijoz</label>
+                            <select class="form-control" name="mijoz_id" style="font-size:13px">
+                                <option value="">— Yangi mijoz —</option>
+                                {% for m in mijozlar %}
+                                <option value="{{ m.pk }}">{{ m.ism_familiya }} ({{ m.telefon }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ism Familiya</label>
+                            <input type="text" class="form-control" name="mijoz_ism" placeholder="Yangi mijoz ismi">
+                        </div>
+                        <div class="form-group" style="margin-bottom:0">
+                            <label class="form-label">Telefon</label>
+                            <input type="text" class="form-control" name="mijoz_tel" placeholder="+998 90 000 00 00">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" id="submitBtn" disabled>
+                        <i class="fas fa-check"></i> Savdoni Tasdiqlash
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let savdoItems = {};
+
+function savdoQosh(id, nomi, narxi, max) {
+    const sonInput = document.getElementById(`son_${id}`);
+    const son = parseInt(sonInput.value) || 1;
+    if (son < 1 || son > max) { alert(`Miqdor 1 dan ${max} gacha bo'lishi kerak!`); return; }
+
+    if (savdoItems[id]) {
+        savdoItems[id].son += son;
+        if (savdoItems[id].son > max) savdoItems[id].son = max;
+    } else {
+        savdoItems[id] = { nomi, narxi, son };
+    }
+    renderSavdo();
+}
+
+function ochirishItem(id) {
+    delete savdoItems[id];
+    renderSavdo();
+}
+
+function renderSavdo() {
+    const list = document.getElementById('savdoList');
+    const empty = document.getElementById('emptyMsg');
+    const hidden = document.getElementById('hiddenInputs');
+    const submitBtn = document.getElementById('submitBtn');
+
+    hidden.innerHTML = '';
+    const keys = Object.keys(savdoItems);
+
+    if (keys.length === 0) {
+        list.innerHTML = `<div id="emptyMsg" style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">
+            <i class="fas fa-cart-shopping" style="font-size:24px;opacity:0.3;display:block;margin-bottom:8px"></i>
+            Mahsulot qo'shing</div>`;
+        submitBtn.disabled = true;
+        document.getElementById('jamiSumma').textContent = '0 so\'m';
+        return;
+    }
+
+    let html = '';
+    let jami = 0;
+    keys.forEach(id => {
+        const item = savdoItems[id];
+        const total = item.narxi * item.son;
+        jami += total;
+        html += `<div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;background:var(--surface2);margin-bottom:6px">
+            <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.nomi}</div>
+                <div style="font-size:11px;color:var(--text-muted)">${item.son} x ${item.narxi.toLocaleString()} = <strong style="color:var(--primary)">${total.toLocaleString()}</strong></div>
+            </div>
+            <button onclick="ochirishItem(${id})" style="background:none;border:none;cursor:pointer;color:var(--danger);padding:4px">
+                <i class="fas fa-xmark"></i>
+            </button>
+        </div>`;
+        hidden.innerHTML += `<input type="hidden" name="mahsulot_id" value="${id}">
+            <input type="hidden" name="son" value="${item.son}">`;
+    });
+
+    list.innerHTML = html;
+    document.getElementById('jamiSumma').textContent = jami.toLocaleString() + ' so\'m';
+    submitBtn.disabled = false;
+}
+
+function toggleNasiya() {
+    const val = document.getElementById('tolovTuri').value;
+    document.getElementById('nasiyaSection').style.display = val === 'nasiya' ? 'block' : 'none';
+}
+
+// Search filter
+document.getElementById('searchInput').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('#mahsulotTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

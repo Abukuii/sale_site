@@ -1,0 +1,147 @@
+{% extends 'crm/base.html' %}
+{% block title %}Dashboard — Qurilish Mollari CRM{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Bugungi ko'rsatkichlar{% endblock %}
+
+{% block content %}
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-boxes-stacked"></i></div>
+        <div class="stat-info">
+            <div class="stat-label">Jami Mahsulot</div>
+            <div class="stat-value">{{ jami_mahsulotlar }}</div>
+            <div class="stat-sub">Ombordagi turlar</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-cart-shopping"></i></div>
+        <div class="stat-info">
+            <div class="stat-label">Bugungi Savdo</div>
+            <div class="stat-value">{{ jami_savdolar }}</div>
+            <div class="stat-sub">Ta sotildi</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon cyan"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="stat-info">
+            <div class="stat-label">Bugungi Daromad</div>
+            <div class="stat-value" style="font-size:17px">{{ bugungi_daromad|floatformat:0 }}</div>
+            <div class="stat-sub">So'm</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-calendar-check"></i></div>
+        <div class="stat-info">
+            <div class="stat-label">Oylik Daromad</div>
+            <div class="stat-value" style="font-size:17px">{{ oylik_daromad|floatformat:0 }}</div>
+            <div class="stat-sub">So'm</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon red"><i class="fas fa-user-clock"></i></div>
+        <div class="stat-info">
+            <div class="stat-label">Qarzdorlar</div>
+            <div class="stat-value">{{ jami_qarzdorlar }}</div>
+            <div class="stat-sub">Nasiya mijozlar</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-triangle-exclamation"></i></div>
+        <div class="stat-info">
+            <div class="stat-label">Kam Qolgan</div>
+            <div class="stat-value">{{ kam_qolganlar }}</div>
+            <div class="stat-sub">10 ta va undan kam</div>
+        </div>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns: 1fr 360px; gap:20px;">
+    <!-- Chart -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-chart-line" style="color:var(--primary)"></i>
+            <span class="card-title">Haftalik Savdo Grafigi</span>
+        </div>
+        <div class="card-body">
+            <canvas id="savdoChart" height="120"></canvas>
+        </div>
+    </div>
+
+    <!-- Oxirgi savdolar -->
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-clock-rotate-left" style="color:var(--primary)"></i>
+            <span class="card-title">Oxirgi Savdolar</span>
+        </div>
+        <div style="padding:0 6px 6px">
+            {% for s in oxirgi_savdolar %}
+            <div style="display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--border); transition:background 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+                <div style="width:36px;height:36px;border-radius:8px;background:{% if s.tolov_turi == 'nasiya' %}#fef2f2{% else %}#ecfdf5{% endif %};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="fas fa-{% if s.tolov_turi == 'nasiya' %}clock{% else %}check{% endif %}" style="color:{% if s.tolov_turi == 'nasiya' %}var(--danger){% else %}var(--success){% endif %};font-size:13px"></i>
+                </div>
+                <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                        {{ s.mijoz.ism_familiya|default:"Naqd savdo" }}
+                    </div>
+                    <div style="font-size:11px;color:var(--text-muted)">{{ s.sana }}</div>
+                </div>
+                <div style="font-size:13px;font-weight:700;color:var(--primary);white-space:nowrap">
+                    {{ s.jami_summa|floatformat:0 }}
+                </div>
+            </div>
+            {% empty %}
+            <div style="padding:30px;text-align:center;color:var(--text-muted)">
+                <i class="fas fa-inbox" style="font-size:28px;margin-bottom:8px;display:block;opacity:0.4"></i>
+                Hali savdo yo'q
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const haftalikData = {{ haftalik_data|safe }};
+const ctx = document.getElementById('savdoChart').getContext('2d');
+
+const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+gradient.addColorStop(0, 'rgba(26,86,219,0.2)');
+gradient.addColorStop(1, 'rgba(26,86,219,0)');
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: haftalikData.map(d => d.kun),
+        datasets: [{
+            label: "Savdo (so'm)",
+            data: haftalikData.map(d => d.summa),
+            borderColor: '#1a56db',
+            backgroundColor: gradient,
+            borderWidth: 2.5,
+            pointBackgroundColor: '#1a56db',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: ctx => `${ctx.parsed.y.toLocaleString()} so'm`
+                }
+            }
+        },
+        scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 12 } } },
+            y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 }, callback: v => v.toLocaleString() } }
+        }
+    }
+});
+</script>
+{% endblock %}
